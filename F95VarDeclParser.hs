@@ -5,6 +5,7 @@ import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language
 
+-- Run a parser p on a string str and print the result
 run_parser_print :: Show a => Parser a -> String -> IO ()
 run_parser_print p str = do
       case parse p "" str of
@@ -13,6 +14,7 @@ run_parser_print p str = do
                print err
            Right x  -> putStrLn $ "    "++(show x)++","
                                                                                                                                                          
+-- Run a parser p on a string str and return the result
 run_parser :: Parser a -> String -> a
 run_parser p str =  case parse p "" str of
     Left err -> error $ "parse error at " ++ (show err)
@@ -51,18 +53,25 @@ arglist_parser = return [dummyVarName]
 ocl_argmode_parser :: Parser OclArgMode    
 ocl_argmode_parser = return dummyArgMode
 
+-- Parser for a term in expression as used e.g. in the dimension() attribute. 
+-- This is not a dummy
 term :: Parser Expr
 term = parens expr_parser <|> const_expr <|> var_expr <?> "simple expression"
       
+-- Parser for an expression as used e.g. in the dimension() attribute. 
+-- This is not a dummy
 expr_parser :: Parser Expr
 expr_parser = buildExpressionParser optable term <?> "expression"
 
+-- parser for a constant, e.g. 42
 const_expr :: Parser Expr
 const_expr = return dummyConstExpr
 
+-- parser for a variable e.g. v
 var_expr :: Parser Expr
 var_expr = return dummyVarExpr
 
+-- I suggest you don't touch the code below. It is not dummy code.
 optable =
     let
         binop name assoc   = Infix ( do {  reservedOp name; return (\x y ->(Op (MkOpExpr name x y))) } ) assoc

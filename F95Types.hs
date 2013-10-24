@@ -20,6 +20,7 @@ import F95VarDecl
 import F95ParDecl
 
 import Data.Map
+-- a table with as key the argument name and as value the corresponding VarDecl record.
 type ArgTable = Data.Map.Map String VarDecl
 
 

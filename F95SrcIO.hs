@@ -2,10 +2,11 @@ module F95SrcIO (
 		read_F95_src,
         write_F95_src
 ) where
-import System.IO
 import Data.Char (toLower)
+import System.IO
 -- Fortran is case-insensitive so turn everything into lowercase
 lc = map toLower
+
 read_F95_src :: String -> IO [String]
 read_F95_src src_name = do  
 	handle <- openFile src_name ReadMode  
