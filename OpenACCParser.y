@@ -1,5 +1,5 @@
 {
-module OpenACCSintatic (parseACCFull) where
+module OpenACCSintatic (parseACCLine) where
 
 import F95VarDecl
 import OpenACCLexical
@@ -69,6 +69,7 @@ Dimension: Expr { MkRange (Const 1) $1 }
 Expr:   Expr '+' Expr       { Op (MkOpExpr "add" $1 $3) }
     | Expr '-' Expr         { Op (MkOpExpr "sub" $1 $3) }
     | '(' Expr ')'          { $2 }
+    | '-' Expr              { Pref (MkPrefixOpExpr "negative" $2) }
     | num                   { Const $1 }
     | var                   { Var $1 }
 
@@ -100,7 +101,7 @@ parseError _ = error "Sintatic parse error"
 
 -- parseAll :: String -> [ACCExpr]
 
-parseACCFull :: String -> ACCExpr
-parseACCFull = parse . scanACCTokens
+parseACCLine :: String -> ACCExpr
+parseACCLine = parse . scanACCTokens
 
 }
