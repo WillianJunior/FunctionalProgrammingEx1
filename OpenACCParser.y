@@ -86,8 +86,8 @@ data AbstractList a = Single a
             | Multiple (AbstractList a) a deriving (Show)
 
 data ACCExpr =  ACCVarDecl VarDecl
-             | ACCArgsEnd
              | ACCArgsBegin
+             | ACCArgsEnd
              | ACCConstArgsBegin
              | ACCConstArgsEnds
              deriving (Show)
