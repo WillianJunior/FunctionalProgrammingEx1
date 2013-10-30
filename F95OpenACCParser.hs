@@ -12,7 +12,11 @@ data LineType = Arg String
 
 -- given the source code as a list of lines (strings), extract the OpenACC regions for Arguments and ConstArguments as well as the parameter declarations, and return them as a tuple of three lists of strings, in that order.
 extract_OpenACC_regions_from_F95_src :: [String] -> ([String],[String],[String])
-extract_OpenACC_regions_from_F95_src in_src_lines = ([],[],[])
+extract_OpenACC_regions_from_F95_src in_src_lines = (args, consts, [])
+	where
+		args = extractArg lines
+		consts = extractConst lines
+		lines = need_a_better_name (extract_Lines_from_F95_src in_src_lines) []
   
 extract_Lines_from_F95_src :: [String] -> [Line]
 extract_Lines_from_F95_src lines = foldr (++) [] $ map scanACCRegions lines
@@ -28,16 +32,26 @@ need_a_better_name (CodeLine x:xs) st@(ACCArgsBegin:_) = (Arg x) : need_a_better
 need_a_better_name (CodeLine x:xs) st@(ACCConstArgsBegin:_) = (ConstArg x) : need_a_better_name xs st
 need_a_better_name (CodeLine x:xs) st@(ACCParamBegin:_) = (Param x) : need_a_better_name xs st
 need_a_better_name (CodeLine x:xs) [] = need_a_better_name xs []
-need_a_better_name [] _ = []
+need_a_better_name [] [] = []
+
+extractArg :: [LineType] -> [String]
+extractArg ((Arg x):xs) = x : extractArg xs
+extractArg (x:xs) = extractArg xs
+extractArg [] = []
+
+extractConst :: [LineType] -> [String]
+extractConst ((ConstArg x):xs) = x : extractConst xs
+extractConst (x:xs) = extractConst xs
+extractConst [] = []
 
 -- question: can regions have multiple levels?
 -- question: where does the param begins and ends?
 -- question: this version ignore empty new line, is that a problem?
 
---data Line = ACCArgsBegin
---          | ACCArgsEnd
---          | ACCConstArgsBegin
---          | ACCConstArgsEnds
---          | ACCParamBegin
---          | CodeLine String
---          deriving (Show)
+-- data Line = ACCArgsBegin
+--           | ACCArgsEnd
+--           | ACCConstArgsBegin
+--           | ACCConstArgsEnds
+--           | ACCParamBegin
+--           | CodeLine String
+--           deriving (Show)
