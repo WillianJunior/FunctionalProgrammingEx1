@@ -13,10 +13,10 @@ $symbols = [\.\:\=\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/\!\_\&\']
 tokens :-
 
   "!$ACC Arguments"                        { \s -> ACCArgsBegin }
-  "!$ACC ConstArguments"                   { \s -> ACCArgsEnd }
-  "! Parameters"                           { \s -> ACCConstArgsBegin }
-  "!$ACC End Arguments"                    { \s -> ACCConstArgsEnds }
-  "!$ACC End ConstArguments"               { \s -> ACCParamBegin }
+  "!$ACC ConstArguments"                   { \s -> ACCConstArgsBegin }
+  "! Parameters"                           { \s -> ACCParamBegin }
+  "!$ACC End Arguments"                    { \s -> ACCArgsEnd }
+  "!$ACC End ConstArguments"               { \s -> ACCConstArgsEnds }
   [$alpha $digit $symbols $white]+         { \s -> CodeLine s }
 
 {

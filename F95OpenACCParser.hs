@@ -18,7 +18,17 @@ extract_Lines_from_F95_src :: [String] -> [Line]
 extract_Lines_from_F95_src lines = foldr (++) [] $ map scanACCRegions lines
 
 need_a_better_name :: [Line] -> Stack -> [LineType]
-need_a_better_name (ACCArgsBegin:xs) st reg = need_a_better_name xs (ACCArgsBegin:st) reg
+need_a_better_name (ACCArgsBegin:xs) st = need_a_better_name xs (ACCArgsBegin:st)
+need_a_better_name (ACCArgsEnd:xs) (st:sts) = need_a_better_name xs sts
+need_a_better_name (ACCConstArgsBegin:xs) st = need_a_better_name xs (ACCConstArgsBegin:st)
+need_a_better_name (ACCConstArgsEnds:xs) (st:sts) = need_a_better_name xs sts
+-- need_a_better_name (ACCParamBegin:xs) st = need_a_better_name xs (ACCParamBegin:st)
+need_a_better_name (ACCParamBegin:xs) st = need_a_better_name xs st -- temp: ignore the paramBeg flag
+need_a_better_name (CodeLine x:xs) st@(ACCArgsBegin:_) = (Arg x) : need_a_better_name xs st
+need_a_better_name (CodeLine x:xs) st@(ACCConstArgsBegin:_) = (ConstArg x) : need_a_better_name xs st
+need_a_better_name (CodeLine x:xs) st@(ACCParamBegin:_) = (Param x) : need_a_better_name xs st
+need_a_better_name (CodeLine x:xs) [] = need_a_better_name xs []
+need_a_better_name [] _ = []
 
 -- question: can regions have multiple levels?
 -- question: where does the param begins and ends?
