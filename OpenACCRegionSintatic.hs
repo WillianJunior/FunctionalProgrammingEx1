@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -w #-}
-module OpenACCRegionSintatic (parseACCLine) where
+module OpenACCRegionSintatic (parseACCLine, Line) where
 
 import F95VarDecl
 import OpenACCRegionLexical
@@ -11,68 +11,53 @@ data HappyAbsSyn t4
 	| HappyErrorToken Int
 	| HappyAbsSyn4 t4
 
-action_0 (5) = happyShift action_4
-action_0 (8) = happyShift action_5
-action_0 (10) = happyShift action_6
+action_0 (5) = happyShift action_2
+action_0 (6) = happyShift action_4
+action_0 (7) = happyShift action_5
+action_0 (8) = happyShift action_6
+action_0 (9) = happyShift action_7
+action_0 (10) = happyShift action_8
 action_0 (4) = happyGoto action_3
 action_0 _ = happyFail
 
 action_1 (5) = happyShift action_2
 action_1 _ = happyFail
 
-action_2 (6) = happyShift action_7
-action_2 _ = happyFail
+action_2 _ = happyReduce_1
 
 action_3 (11) = happyAccept
 action_3 _ = happyFail
 
-action_4 (6) = happyShift action_7
-action_4 (7) = happyShift action_8
-action_4 (9) = happyShift action_9
-action_4 _ = happyFail
+action_4 _ = happyReduce_3
 
-action_5 _ = happyReduce_5
+action_5 _ = happyReduce_2
 
-action_6 _ = happyReduce_6
+action_6 _ = happyReduce_4
 
-action_7 _ = happyReduce_1
+action_7 _ = happyReduce_5
 
-action_8 _ = happyReduce_3
+action_8 _ = happyReduce_6
 
-action_9 (6) = happyShift action_10
-action_9 (7) = happyShift action_11
-action_9 _ = happyFail
-
-action_10 _ = happyReduce_2
-
-action_11 _ = happyReduce_4
-
-happyReduce_1 = happySpecReduce_2  4 happyReduction_1
+happyReduce_1 = happySpecReduce_1  4 happyReduction_1
 happyReduction_1 _
-	_
 	 =  HappyAbsSyn4
 		 (ACCArgsBegin
 	)
 
-happyReduce_2 = happySpecReduce_3  4 happyReduction_2
+happyReduce_2 = happySpecReduce_1  4 happyReduction_2
 happyReduction_2 _
-	_
-	_
 	 =  HappyAbsSyn4
 		 (ACCArgsEnd
 	)
 
-happyReduce_3 = happySpecReduce_2  4 happyReduction_3
+happyReduce_3 = happySpecReduce_1  4 happyReduction_3
 happyReduction_3 _
-	_
 	 =  HappyAbsSyn4
 		 (ACCConstArgsBegin
 	)
 
-happyReduce_4 = happySpecReduce_3  4 happyReduction_4
+happyReduce_4 = happySpecReduce_1  4 happyReduction_4
 happyReduction_4 _
-	_
-	_
 	 =  HappyAbsSyn4
 		 (ACCConstArgsEnds
 	)
@@ -80,7 +65,7 @@ happyReduction_4 _
 happyReduce_5 = happySpecReduce_1  4 happyReduction_5
 happyReduction_5 _
 	 =  HappyAbsSyn4
-		 (ACCParameters
+		 (ACCParamBegin
 	)
 
 happyReduce_6 = happySpecReduce_1  4 happyReduction_6
@@ -96,11 +81,11 @@ happyNewToken action sts stk [] =
 happyNewToken action sts stk (tk:tks) =
 	let cont i = action i i tk (HappyState action) sts stk tks in
 	case tk of {
-	TokenACC -> cont 5;
-	TokenArguments -> cont 6;
-	TokenConstArguments -> cont 7;
-	TokenParamenter -> cont 8;
-	TokenEnd -> cont 9;
+	TokenArguments -> cont 5;
+	TokenConstArguments -> cont 6;
+	TokenArgumentsEnd -> cont 7;
+	TokenConstArgumentsEnd -> cont 8;
+	TokenParamenter -> cont 9;
 	TokenCodeLine happy_dollar_dollar -> cont 10;
 	_ -> happyError' (tk:tks)
 	}
@@ -132,20 +117,18 @@ parse tks = happyRunIdentity happySomeParser where
 happySeq = happyDontSeq
 
 
-data ACCExpr =  CodeLine String
-             | ACCArgsBegin
-             | ACCArgsEnd
-             | ACCConstArgsBegin
-             | ACCConstArgsEnds
-             | ACCParameters
-             deriving (Show)
+data Line = ACCArgsBegin
+          | ACCArgsEnd
+          | ACCConstArgsBegin
+          | ACCConstArgsEnds
+          | ACCParamBegin
+          | CodeLine String
+          deriving (Show)
 
 parseError :: [Token] -> a
 parseError _ = error "Sintatic parse error"
 
--- parseAll :: String -> [ACCExpr]
-
-parseACCLine :: String -> ACCExpr
+parseACCLine :: String -> Line
 parseACCLine = parse . scanACCRegionTokens
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
