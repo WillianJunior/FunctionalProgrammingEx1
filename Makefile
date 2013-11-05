@@ -3,5 +3,5 @@ all:
 	clean
 
 clean:
-	rm *.o
-	rm *.hi
+	-rm *.o
+	-rm *.hi

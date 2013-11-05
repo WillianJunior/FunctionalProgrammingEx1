@@ -40,15 +40,22 @@ parse_par_decls par_lines = H.empty
 -- This takes a range expression and returns a tuple with the variable name and the computed size
 eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
 eval_range_expr ocl_args par_table var_name = ("DUMMY",0)
-       
+ 
+get_String :: IO [String] -> [String]
+get_String IO str = str
+
 -- ###############################
 main :: IO ()
 main = do 
-    putStr $ unlines [
-        "-- read source template from file"
-        ,"-- extract OpenACC regions"
-        ,"-- parse declarations"
-        ,"-- compute sizes for OpenCL arguments (this is hard, leave for last)"
-        ,"-- generate the target source code" 
-        ,"-- write generated source to file"
-        ]
+	let src_in = "input"
+	let src_out = "output"
+	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src $ get_String $ read_F95_src src_in
+	let output = [""]
+	write_F95_src src_out output
+
+--        "-- read source template from file"
+--        ,"-- extract OpenACC regions"
+--        ,"-- parse declarations"
+--        ,"-- compute sizes for OpenCL arguments (this is hard, leave for last)"
+--        ,"-- generate the target source code" 
+--        ,"-- write generated source to file"

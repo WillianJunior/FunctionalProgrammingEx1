@@ -12,11 +12,6 @@ import OpenACCLexical
 
 %token
 
-  acc                           { TokenACC }
-  arguments                     { TokenArguments }
-  constArguments                { TokenConstArguments }
-  parameters                    { TokenParamenter }
-  end                           { TokenEnd }
   real                          { TokenReal }
   integer                       { TokenInteger }
   kind                          { TokenKind }
@@ -32,30 +27,21 @@ import OpenACCLexical
   '('                           { TokenLParen }
   ')'                           { TokenRParen }
   ':'                           { TokenColon }
+  dbCl                          { TokenDoubleColon }
   ','                           { TokenComma }
   num                           { TokenNumber $$ }
   var                           { TokenVarName $$ }
 
 %%
 
-ACCExpr: ACCArgs {$1}
-        | ACCArgsEnd {$1}
-        | ACCConstArgs {$1}
-        | ACCConstArgsEnds {$1}
-        | Decl {$1}
+ACCExpr:  Decl {$1}
         | DeclArg {$1}
 
-ACCArgs: acc arguments { ACCArgsBegin }
+Decl: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' dbCl NameList { VarLine (MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $13) Read False) }
 
-ACCArgsEnd: acc end arguments { ACCArgsEnd }
+DeclArg: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' dbCl NameList acc argMode ArgMode { VarLine (MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $13) $16 False) }
 
-ACCConstArgs: acc constArguments { ACCConstArgsBegin }
-
-ACCConstArgsEnds: acc end constArguments { ACCConstArgsEnds }
-
-Decl: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' ':'':' NameList { ACCVarDecl (MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $14) Read False) }
-
-DeclArg: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' ':'':' NameList acc argMode ArgMode { ACCVarDecl (MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $14) $17 False) }
+-- kind of const arg optional, if not especified = 4
 
 DataType: real { F95Real }
         | integer { F95Integer }
@@ -85,12 +71,8 @@ ArgMode: read           { Read }
 data AbstractList a = Single a
             | Multiple (AbstractList a) a deriving (Show)
 
-data ACCExpr =  ACCVarDecl VarDecl
-             | ACCArgsBegin
-             | ACCArgsEnd
-             | ACCConstArgsBegin
-             | ACCConstArgsEnds
-             deriving (Show)
+ACCLine = VarLine VarDecl
+        | ParLine ParDecl
 
 listFlatter :: AbstractList a -> [a]
 listFlatter (Single single) = [single]
@@ -99,9 +81,7 @@ listFlatter (Multiple list single) = listFlatter list ++ [single]
 parseError :: [Token] -> a
 parseError _ = error "Sintatic parse error"
 
--- parseAll :: String -> [ACCExpr]
-
-parseACCLine :: String -> ACCExpr
+parseACCLine :: String -> ACCLine
 parseACCLine = parse . scanACCTokens
 
 }

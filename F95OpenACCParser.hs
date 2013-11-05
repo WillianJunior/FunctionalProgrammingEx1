@@ -2,9 +2,18 @@ module F95OpenACCParser (
     extract_OpenACC_regions_from_F95_src
 ) where
 
-import OpenACCRegions
+import Text.Regex.Posix
 
 type Stack = [Line]
+
+data Line = ACCArgsBegin
+          | ACCArgsEnd
+          | ACCConstArgsBegin
+          | ACCConstArgsEnds
+          | CodeLine String
+          deriving (Show)
+
+
 data LineType = Arg String
 			  | ConstArg String
 			  | Param String
@@ -12,46 +21,43 @@ data LineType = Arg String
 
 -- given the source code as a list of lines (strings), extract the OpenACC regions for Arguments and ConstArguments as well as the parameter declarations, and return them as a tuple of three lists of strings, in that order.
 extract_OpenACC_regions_from_F95_src :: [String] -> ([String],[String],[String])
-extract_OpenACC_regions_from_F95_src in_src_lines = (args, consts, [])
-	where
-		args = extractArg lines
-		consts = extractConst lines
-		lines = need_a_better_name (extract_Lines_from_F95_src in_src_lines) []
-  
-extract_Lines_from_F95_src :: [String] -> [Line]
-extract_Lines_from_F95_src lines = foldr (++) [] $ map scanACCRegions lines
+extract_OpenACC_regions_from_F95_src in_src_lines = (args, consts, params)
+	where	
+		args = extract_Arg lines
+		consts = extract_Const lines
+		params = extract_Params in_src_lines
+		lines = line_classifier (extract_Limits in_src_lines) []
 
-need_a_better_name :: [Line] -> Stack -> [LineType]
-need_a_better_name (ACCArgsBegin:xs) st = need_a_better_name xs (ACCArgsBegin:st)
-need_a_better_name (ACCArgsEnd:xs) (st:sts) = need_a_better_name xs sts
-need_a_better_name (ACCConstArgsBegin:xs) st = need_a_better_name xs (ACCConstArgsBegin:st)
-need_a_better_name (ACCConstArgsEnds:xs) (st:sts) = need_a_better_name xs sts
--- need_a_better_name (ACCParamBegin:xs) st = need_a_better_name xs (ACCParamBegin:st)
-need_a_better_name (ACCParamBegin:xs) st = need_a_better_name xs st -- temp: ignore the paramBeg flag
-need_a_better_name (CodeLine x:xs) st@(ACCArgsBegin:_) = (Arg x) : need_a_better_name xs st
-need_a_better_name (CodeLine x:xs) st@(ACCConstArgsBegin:_) = (ConstArg x) : need_a_better_name xs st
-need_a_better_name (CodeLine x:xs) st@(ACCParamBegin:_) = (Param x) : need_a_better_name xs st
-need_a_better_name (CodeLine x:xs) [] = need_a_better_name xs []
-need_a_better_name [] [] = []
+line_classifier :: [Line] -> Stack -> [LineType]
+line_classifier (ACCArgsBegin:xs) st = line_classifier xs (ACCArgsBegin:st)
+line_classifier (ACCArgsEnd:xs) (st:sts) = line_classifier xs sts
+line_classifier (ACCConstArgsBegin:xs) st = line_classifier xs (ACCConstArgsBegin:st)
+line_classifier (ACCConstArgsEnds:xs) (st:sts) = line_classifier xs sts
+line_classifier (CodeLine x:xs) st@(ACCArgsBegin:_) = (Arg x) : line_classifier xs st
+line_classifier (CodeLine x:xs) st@(ACCConstArgsBegin:_) = (ConstArg x) : line_classifier xs st
+line_classifier (CodeLine x:xs) [] = line_classifier xs []
+line_classifier [] [] = []
 
-extractArg :: [LineType] -> [String]
-extractArg ((Arg x):xs) = x : extractArg xs
-extractArg (x:xs) = extractArg xs
-extractArg [] = []
+extract_Arg :: [LineType] -> [String]
+extract_Arg ((Arg x):xs) = x : extract_Arg xs
+extract_Arg (x:xs) = extract_Arg xs
+extract_Arg [] = []
 
-extractConst :: [LineType] -> [String]
-extractConst ((ConstArg x):xs) = x : extractConst xs
-extractConst (x:xs) = extractConst xs
-extractConst [] = []
+extract_Const :: [LineType] -> [String]
+extract_Const ((ConstArg x):xs) = x : extract_Const xs
+extract_Const (x:xs) = extract_Const xs
+extract_Const [] = []
 
--- question: can regions have multiple levels?
--- question: where does the param begins and ends?
--- question: this version ignore empty new line, is that a problem?
+extract_Params :: [String] -> [String]
+extract_Params (str:xs) | (str =~ "!" :: Bool) = extract_Params xs
+						| (str =~ "parameter" :: Bool) = str : extract_Params xs
+						| otherwise = extract_Params xs
+extract_Params [] = []
 
--- data Line = ACCArgsBegin
---           | ACCArgsEnd
---           | ACCConstArgsBegin
---           | ACCConstArgsEnds
---           | ACCParamBegin
---           | CodeLine String
---           deriving (Show)
+extract_Limits :: [String] -> [Line]
+extract_Limits (str:xs) | (str =~ "^![/$]ACC Arguments([ ]*)$" :: Bool) = ACCArgsBegin : extract_Limits xs	
+						| (str =~ "^![/$]ACC End Arguments([ ]*)$" :: Bool) = ACCArgsEnd : extract_Limits xs
+						| (str =~ "^![/$]ACC ConstArguments([ ]*)$" :: Bool) = ACCConstArgsBegin : extract_Limits xs
+						| (str =~ "^![/$]ACC End ConstArguments([ ]*)$" :: Bool) = ACCConstArgsEnds : extract_Limits xs
+						| otherwise = CodeLine str : extract_Limits xs
+extract_Limits [] = []
