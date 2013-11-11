@@ -3,7 +3,7 @@ module F95VarDecl where
 
 {-
 This is the datatype for representing a parsed variable declaration
-        real(kind=4), dimension(0:ip,0:jp,0:kp)  :: g,h,e,d	
+	
 -}
 data VarDecl = MkVarDecl {
 	vd_vartype :: VarType

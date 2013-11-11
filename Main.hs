@@ -41,15 +41,13 @@ parse_par_decls par_lines = H.empty
 eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
 eval_range_expr ocl_args par_table var_name = ("DUMMY",0)
  
-get_String :: IO [String] -> [String]
-get_String IO str = str
-
 -- ###############################
 main :: IO ()
 main = do 
 	let src_in = "input"
 	let src_out = "output"
-	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src $ get_String $ read_F95_src src_in
+	lines <- read_F95_src src_in
+	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src $ lines
 	let output = [""]
 	write_F95_src src_out output
 

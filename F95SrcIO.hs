@@ -11,7 +11,7 @@ read_F95_src :: String -> IO [String]
 read_F95_src src_name = do  
 	handle <- openFile src_name ReadMode  
 	contents <- hGetContents handle  
-	return $ lines contents
+	return $ map lc $ lines contents
 
 write_F95_src :: String -> [String] -> IO ()
 write_F95_src src_name src_lines = do  

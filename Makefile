@@ -1,6 +1,5 @@
-all:
+all: clean
 	ghc Main.hs -o Main
-	clean
 
 clean:
 	-rm *.o

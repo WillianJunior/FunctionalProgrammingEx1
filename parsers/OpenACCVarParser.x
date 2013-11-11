@@ -1,12 +1,13 @@
 {
 {-# OPTIONS_GHC -w #-}
-module OpenACCConstLexical (Token(..),scanACCConstTokens) where
+module OpenACCVarLexical (Token(..),scanACCVarTokens) where
 }
 
 %wrapper "basic"
 
 $digit = 0-9
 $alpha = [a-zA-Z]
+$eol   = [\n]
 
 tokens :-
 
@@ -33,7 +34,8 @@ tokens :-
 
 {
 
-data Token = TokenReal
+data Token = TokenACC
+           | TokenReal
            | TokenInteger
            | TokenKind
            | TokenDimension
@@ -54,6 +56,6 @@ data Token = TokenReal
            | TokenVarName String
            deriving (Eq,Show)
 
-scanACCConstTokens = alexScanTokens
+scanACCVarTokens = alexScanTokens
 
 }
