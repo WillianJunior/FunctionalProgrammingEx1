@@ -1,5 +1,5 @@
 {
-module OpenACCVarParser (parseACCVarLine) where
+module OpenACCConstParser (parseACCConstLine) where
 
 import F95VarDecl
 import OpenACCVarLexical
@@ -16,11 +16,14 @@ import OpenACCVarLexical
   integer                       { TokenInteger }
   kind                          { TokenKind }
   dimension                     { TokenDimension }
-  parameter                     { TokenParameter }
+  intent                        { TokenIntent }
   argMode                       { TokenArgMode }
   read                          { TokenRead }
   write                         { TokenWrite }
   readWrite                     { TokenReadWrite }
+  in                            { TokenIn }
+  out                           { TokenOut }
+  inout                         { TokenInOut }
   '='                           { TokenEq }
   '+'                           { TokenAdd }
   '-'                           { TokenSub }
@@ -34,26 +37,20 @@ import OpenACCVarLexical
 
 %%
 
-Test: DataType '(' kind '=' num ')' OptionalDimension dbCl NameList { MkVarDecl (MkVarType $1 $5) $7 In (listFlatter $9) Read False }
-ACCExpr:  Decl    { $1 }
-        | DeclArg { $1 }
-
-
-OptionalDimension: {- empty -}                          { [] }
-                 | ',' dimension '(' DimensionList ')'  { listFlatter $4 }
-
-Decl: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' dbCl NameList { MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $13) Read False }
-
-DeclArg: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' dbCl NameList argMode ArgMode { MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $13) $15 False }
-
--- kind of const arg optional, if not especified = 4
+DeclArg: DataType OptionalKind OptionalDimension OptionalIntent dbCl NameList OptionalArgMode {MkVarDecl (MkVarType $1 $2) $3 $4 (listFlatter $6) $7 False}
 
 DataType: real    { F95Real }
         | integer { F95Integer }
 
+-- kind of const arg optional, if not especified = 4
+OptionalKind: {- empty -}           { 4 }
+            | '(' kind '=' num ')'  { $4 }
+
+OptionalDimension: {- empty -}                          { [] }
+                 | dimension '(' DimensionList ')'  { listFlatter $3 }
+
 DimensionList: Dimension                     { Single $1 }
              | DimensionList ',' Dimension   { Multiple $1 $3 }
-             | {- empty -}                   { Empty }
 
 Dimension: Expr { MkRange (Const 1) $1 }
          | Expr ':' Expr { MkRange $1 $3 }
@@ -65,12 +62,24 @@ Expr: Expr '+' Expr         { Op (MkOpExpr "add" $1 $3) }
     | num                   { Const $1 }
     | var                   { Var $1 }
 
+-- what to do if the intent is not mentioned? is InOut ok?
+OptionalIntent: {- empty -}             { InOut }
+              | intent '(' Intent ')'   { $3 }
+
+Intent: in    { In }
+      | out   { Out }
+      | inout { InOut }
+
 NameList: var                 { Single $1 }
         | NameList ',' var    { Multiple $1 $3}
 
-ArgMode: read           { Read }
-        | write         { Write }
-        | readWrite     { ReadWrite }
+OptionalArgMode: {- empty -}      { ReadWrite }
+               | argMode ArgMode  { $2 }
+
+
+ArgMode: read          { Read }
+       | write         { Write }
+       | readWrite     { ReadWrite }
 
 {
 
@@ -86,7 +95,7 @@ listFlatter (Empty) = []
 parseError :: [Token] -> a
 parseError _ = error "Sintatic parse error"
 
-parseACCVarLine :: String -> VarDecl
-parseACCVarLine = parse . scanACCVarTokens
+parseACCConstLine :: String -> VarDecl
+parseACCConstLine = parse . scanACCVarTokens
 
 }

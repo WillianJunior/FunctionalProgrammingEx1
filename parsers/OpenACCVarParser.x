@@ -15,12 +15,15 @@ tokens :-
   real                              { \s -> TokenReal }
   integer                           { \s -> TokenInteger }
   kind                              { \s -> TokenKind }
-  dimension                         { \s -> TokenDimension }
-  parameter                         { \s -> TokenParameter }
-  "!$ACC ArgMode"                   { \s -> TokenArgMode }
+  \,[$white]*dimension              { \s -> TokenDimension }
+  \,[$white]*intent                 { \s -> TokenIntent }
+  "!$ACC Argmode"                   { \s -> TokenArgMode }
   Read                              { \s -> TokenRead }
   Write                             { \s -> TokenWrite }
   ReadWrite                         { \s -> TokenReadWrite }
+  in                                { \s -> TokenIn }
+  out                               { \s -> TokenOut }
+  inout                             { \s -> TokenInOut }
   \=                                { \s -> TokenEq }
   \+                                { \s -> TokenAdd }
   \-                                { \s -> TokenSub }
@@ -39,11 +42,14 @@ data Token = TokenACC
            | TokenInteger
            | TokenKind
            | TokenDimension
-           | TokenParameter
+           | TokenIntent
            | TokenArgMode
            | TokenRead
            | TokenWrite
            | TokenReadWrite
+           | TokenIn
+           | TokenOut
+           | TokenInOut
            | TokenEq
            | TokenSub
            | TokenAdd
