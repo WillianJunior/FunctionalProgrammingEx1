@@ -34,7 +34,7 @@ parse_arg_decls :: [String] -> [String] -> (ArgTable,[String],[String])
 parse_arg_decls arg_lines const_arg_lines = (H.empty,[],[])
 
 -- Given the parameter declarations, create a table with as key the parameter name and as value the parsed declaration	
-parse_par_decls :: [String] -> VarTable    
+parse_par_decls :: [String] -> VarTable
 parse_par_decls par_lines = H.empty
 
 -- This takes a range expression and returns a tuple with the variable name and the computed size
@@ -42,14 +42,15 @@ eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
 eval_range_expr ocl_args par_table var_name = ("DUMMY",0)
  
 -- ###############################
+
 main :: IO ()
 main = do 
-	let src_in = "input"
-	let src_out = "output"
-	lines <- read_F95_src src_in
+	lines <- read_F95_src templ_src_name
 	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src $ lines
+	let (argTable, argsNames, consArgsNames) = parse_arg_decls args consts
+	let varTable = parse_par_decls parms
 	let output = [""]
-	write_F95_src src_out output
+	write_F95_src gen_src_name output
 
 --        "-- read source template from file"
 --        ,"-- extract OpenACC regions"

@@ -34,13 +34,12 @@ import OpenACCVarLexical
 
 %%
 
+Test: DataType '(' kind '=' num ')' OptionalDimension dbCl NameList { MkVarDecl (MkVarType $1 $5) $7 In (listFlatter $9) Read False }
 ACCExpr:  Decl    { $1 }
         | DeclArg { $1 }
 
-Test: DataType '(' kind '=' num ')' 
-OptionalDimension dbCl NameList { MkVarDecl (MkVarType $1 $5) $7 In (listFlatter $9) Read False }
 
-OptionalDimension: {- empty -}                          {  }
+OptionalDimension: {- empty -}                          { [] }
                  | ',' dimension '(' DimensionList ')'  { listFlatter $4 }
 
 Decl: DataType '(' kind '=' num ')' ',' dimension '(' DimensionList ')' dbCl NameList { MkVarDecl (MkVarType $1 $5) (listFlatter $10) In (listFlatter $13) Read False }
