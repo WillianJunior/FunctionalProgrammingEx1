@@ -1,4 +1,4 @@
-all: clean OpenACCVarLexical.hs OpenACCArgParser.hs OpenACCConstParser.hs
+all: OpenACCVarLexical.hs OpenACCArgParser.hs OpenACCConstParser.hs
 	ghc Main.hs -o Main
 	-rm *.o
 	-rm *.hi
@@ -13,5 +13,8 @@ OpenACCConstParser.hs: parsers/OpenACCConstParser.y
 	happy parsers/OpenACCConstParser.y -o OpenACCConstParser.hs
 
 clean:
+	-rm OpenACCVarLexical.hs
+	-rm OpenACCArgParser.hs
+	-rm OpenACCConstParser.hs
 	-rm *.o
 	-rm *.hi
