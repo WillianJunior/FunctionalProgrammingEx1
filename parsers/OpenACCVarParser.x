@@ -27,6 +27,8 @@ tokens :-
   \=                                { \s -> TokenEq }
   \+                                { \s -> TokenAdd }
   \-                                { \s -> TokenSub }
+  \*                                { \s -> TokenMult }
+  \/                                { \s -> TokenDiv }
   \(                                { \s -> TokenLParen }
   \)                                { \s -> TokenRParen }
   \:                                { \s -> TokenColon }
@@ -53,6 +55,8 @@ data Token = TokenACC
            | TokenEq
            | TokenSub
            | TokenAdd
+           | TokenMult
+           | TokenDiv
            | TokenLParen
            | TokenRParen
            | TokenColon

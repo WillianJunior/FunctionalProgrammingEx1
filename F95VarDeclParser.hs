@@ -9,7 +9,7 @@ import Text.ParserCombinators.Parsec.Language
 
 -- since I'm using alex/happy to parse the declarations the code below is useless
 
-run_parser :: [String]
+-- run_parser :: String 
 
 -- Run a parser p on a string str and print the result
 run_parser_print :: Show a => Parser a -> String -> IO ()
@@ -21,10 +21,10 @@ run_parser_print p str = do
            Right x  -> putStrLn $ "    "++(show x)++","
                                                                                                                                                          
 -- Run a parser p on a string str and return the result
--- run_parser :: Parser a -> String -> a
--- run_parser p str =  case parse p "" str of
---     Left err -> error $ "parse error at " ++ (show err)
---     Right val  -> val  
+run_parser :: Parser a -> String -> a
+run_parser p str =  case parse p "" str of
+    Left err -> error $ "parse error at " ++ (show err)
+    Right val  -> val  
 
 f95_var_decl_parser :: Parser VarDecl
 f95_var_decl_parser = return dummyVarDecl

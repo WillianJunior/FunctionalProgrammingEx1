@@ -27,6 +27,8 @@ import OpenACCVarLexical
   '='                           { TokenEq }
   '+'                           { TokenAdd }
   '-'                           { TokenSub }
+  '*'                           { TokenMult }
+  '/'                           { TokenDiv }
   '('                           { TokenLParen }
   ')'                           { TokenRParen }
   ':'                           { TokenColon }
@@ -57,6 +59,8 @@ Dimension: Expr { MkRange (Const 1) $1 }
 
 Expr: Expr '+' Expr         { Op (MkOpExpr "add" $1 $3) }
     | Expr '-' Expr         { Op (MkOpExpr "sub" $1 $3) }
+    | Expr '*' Expr         { Op (MkOpExpr "mul" $1 $3) }
+    | Expr '/' Expr         { Op (MkOpExpr "div" $1 $3) }
     | '(' Expr ')'          { $2 }
     | '-' Expr              { Pref (MkPrefixOpExpr "negative" $2) }
     | num                   { Const $1 }

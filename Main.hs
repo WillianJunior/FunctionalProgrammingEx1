@@ -8,6 +8,9 @@ import OpenCLAPIGenerator ( gen_OpenCL_API_calls )
 import EvalExpr    
 import qualified Data.Map as H
 
+import OpenACCArgParser
+import OpenACCConstParser
+
 {-
 
 Sequence of actions:
@@ -31,11 +34,19 @@ gen_src_name = "module_LES_ocl.f95"
 -- create a table with as key the variable name and as value the parsed declaration
 -- also returns a list of the argument variable names and the constant argument variable names
 parse_arg_decls :: [String] -> [String] -> (ArgTable,[String],[String])
-parse_arg_decls arg_lines const_arg_lines = (H.empty,[],[])
+parse_arg_decls arg_lines const_arg_lines = (argTable,argsNames,consArgsNames)
+	where
+		argTable = H.fromList [(name, arg) | name <- names, arg <- parsedLines, elem name $ vd_varlist arg]	
+		names = argsNames ++ consArgsNames
+		parsedLines = parsedArgLines ++ parsedConstLines
+		parsedArgLines = map parseACCArgLine arg_lines
+		parsedConstLines = map parseACCConstLine const_arg_lines
+		argsNames = foldr (++) [] $ map vd_varlist parsedArgLines
+		consArgsNames = foldr (++) [] $ map vd_varlist parsedConstLines
 
 -- Given the parameter declarations, create a table with as key the parameter name and as value the parsed declaration	
 parse_par_decls :: [String] -> VarTable
-parse_par_decls par_lines = H.empty
+parse_par_decls par_lines = H.fromList []
 
 -- This takes a range expression and returns a tuple with the variable name and the computed size
 eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
@@ -46,7 +57,7 @@ eval_range_expr ocl_args par_table var_name = ("DUMMY",0)
 main :: IO ()
 main = do 
 	lines <- read_F95_src templ_src_name
-	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src $ lines
+	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src lines
 	let (argTable, argsNames, consArgsNames) = parse_arg_decls args consts
 	let varTable = parse_par_decls parms
 	let output = [""]
