@@ -10,6 +10,7 @@ import qualified Data.Map as H
 
 import OpenACCArgParser
 import OpenACCConstParser
+import OpenACCParamParser
 
 {-
 
@@ -46,7 +47,11 @@ parse_arg_decls arg_lines const_arg_lines = (argTable,argsNames,consArgsNames)
 
 -- Given the parameter declarations, create a table with as key the parameter name and as value the parsed declaration	
 parse_par_decls :: [String] -> VarTable
-parse_par_decls par_lines = H.fromList []
+parse_par_decls par_lines = H.fromList $ joinLists (map pd_parname parsedParams) (map pd_parval parsedParams)
+	where
+		parsedParams = map parseACCParamLine par_lines
+		joinLists (x:xs) (y:ys) = (x,y) : joinLists xs ys
+		joinLists [] [] = []
 
 -- This takes a range expression and returns a tuple with the variable name and the computed size
 eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
