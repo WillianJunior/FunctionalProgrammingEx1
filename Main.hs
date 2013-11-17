@@ -54,8 +54,12 @@ parse_par_decls par_lines = H.fromList $ joinLists (map pd_parname parsedParams)
 		joinLists [] [] = []
 
 -- This takes a range expression and returns a tuple with the variable name and the computed size
-eval_range_expr :: ArgTable -> VarTable -> String -> (String, Integer)
-eval_range_expr ocl_args par_table var_name = ("DUMMY",0)
+eval_range_expr :: ArgTable -> VarTable -> String -> (String, [Integer])
+eval_range_expr ocl_args par_table var_name = (var_name, value)
+	where
+		value = (\(Just justVar) -> [myEval (sizeExpr x) par_table | x <- vd_dimension justVar]) var
+		var = H.lookup var_name ocl_args
+		sizeExpr = \x -> Op $ MkOpExpr "sub" (r_stop x) (r_start x)
  
 -- ###############################
 
@@ -63,8 +67,9 @@ main :: IO ()
 main = do 
 	lines <- read_F95_src templ_src_name
 	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src lines
-	let (argTable, argsNames, consArgsNames) = parse_arg_decls args consts
+	let (tempArgTable, argsNames, consArgsNames) = parse_arg_decls args consts
 	let varTable = parse_par_decls parms
+	let argSizeTable = H.fromList $ map (eval_range_expr tempArgTable varTable) (argsNames ++ consArgsNames)
 	let output = [""]
 	write_F95_src gen_src_name output
 
