@@ -5,7 +5,13 @@ import qualified Data.Map as H
 type VarTable = H.Map String Expr
 -- given an expression and the variable lookup table, return the integer value of the evaluated expression and the updated table
 eval :: Expr -> VarTable -> (Integer, VarTable)
-eval expr vtable = (0,H.empty)
+eval (Var name) vt = eval ((\(Just expr) -> expr) $ H.lookup name vt) vt
+eval (Const val) vt = (val, vt)
+eval (Op (MkOpExpr "add" lhs rhs)) vt = ((fst $ eval lhs vt) + (fst $ eval rhs vt), vt)
+eval (Op (MkOpExpr "sub" lhs rhs)) vt = ((fst $ eval lhs vt) - (fst $ eval rhs vt), vt)
+eval (Op (MkOpExpr "div" lhs rhs)) vt = ((fst $ eval lhs vt) `div` (fst $ eval rhs vt), vt)
+eval (Op (MkOpExpr "mul" lhs rhs)) vt = ((fst $ eval lhs vt) * (fst $ eval rhs vt), vt)
+eval (Pref (MkPrefixOpExpr "negative" expr)) vt = (- (fst $ eval expr vt), vt)
 
 -- given a binary operator expression (e.g. x+y) and the variable lookup table, return the integer value of the evaluated expression
 eval_expr :: OpExpr -> VarTable -> Integer -- no clue what to do with it since the operations can be nested (add (sub 3 4) (neg 5)). should return Expr

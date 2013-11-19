@@ -15,7 +15,7 @@ read_F95_src src_name = do
 
 write_F95_src :: String -> [String] -> IO ()
 write_F95_src src_name src_lines = do  
-	handler <- openFile src_name WriteMode  
+	handler <- openFile src_name WriteMode
 	printLinesToHandler handler src_lines
 
 printLinesToHandler :: Handle -> [String] -> IO ()

@@ -1,6 +1,6 @@
 module Main where
 import F95SrcIO ( read_F95_src, write_F95_src )
-import F95OpenACCParser ( extract_OpenACC_regions_from_F95_src )
+import F95OpenACCParser -- ( extract_OpenACC_regions_from_F95_src )
 import F95VarDeclParser ( run_parser, f95_var_decl_parser )
 import F95ParDeclParser ( f95_par_decl_parser )
 import F95Types
@@ -65,12 +65,12 @@ eval_range_expr ocl_args par_table var_name = (var_name, value)
 
 main :: IO ()
 main = do 
-	lines <- read_F95_src templ_src_name
-	let (args, consts, parms) = extract_OpenACC_regions_from_F95_src lines
+	srcLines <- read_F95_src templ_src_name
+	let (args, consts, params) = extract_OpenACC_regions_from_F95_src srcLines
 	let (tempArgTable, argsNames, consArgsNames) = parse_arg_decls args consts
-	let varTable = parse_par_decls parms
-	let argSizeTable = H.fromList $ map (eval_range_expr tempArgTable varTable) (argsNames ++ consArgsNames)
-	let output = [""]
+	let varTable = parse_par_decls params
+	-- let argSizeTable = H.fromList $ map (eval_range_expr tempArgTable varTable) (argsNames ++ consArgsNames)
+	let output = gen_OpenCL_API_calls tempArgTable argsNames consArgsNames srcLines []
 	write_F95_src gen_src_name output
 
 --        "-- read source template from file"

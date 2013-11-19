@@ -1,4 +1,3 @@
-! The content of this file is irrelevant, it is only used for testing IO
 #define IANIME 0
 #define IFBF 1
 module module_LES_ocl
@@ -15,10 +14,13 @@ module module_LES_ocl
             dt, im, jm, km, nmax &
             )
         use oclWrapper
-        use params_common_sn
+!        use params_common_sn
 
         implicit none
-
+    ! Parameters
+        integer, parameter  :: ip = 150
+        integer, parameter  :: jp = 150
+        integer, parameter  :: kp = 90    
     ! Arguments
 !$ACC Arguments	
         real(kind=4), dimension(0:ip+2,0:jp+2,0:kp+1)  :: p

@@ -1,6 +1,6 @@
-module F95OpenACCParser (
-    extract_OpenACC_regions_from_F95_src
-) where
+module F95OpenACCParser where
+    --extract_OpenACC_regions_from_F95_src
+--) where
 
 import Text.Regex.Posix
 
@@ -55,9 +55,9 @@ extract_Params (str:xs) | (str =~ "!" :: Bool) = extract_Params xs
 extract_Params [] = []
 
 extract_Limits :: [String] -> [Line]
-extract_Limits (str:xs) | (str =~ "^![/$]ACC Arguments([ ]*)$" :: Bool) = ACCArgsBegin : extract_Limits xs	
-						| (str =~ "^![/$]ACC End Arguments([ ]*)$" :: Bool) = ACCArgsEnd : extract_Limits xs
-						| (str =~ "^![/$]ACC ConstArguments([ ]*)$" :: Bool) = ACCConstArgsBegin : extract_Limits xs
-						| (str =~ "^![/$]ACC End ConstArguments([ ]*)$" :: Bool) = ACCConstArgsEnds : extract_Limits xs
+extract_Limits (str:xs) | (str =~ "^![/$]acc arguments([ ]*[\t]*)$" :: Bool) = ACCArgsBegin : extract_Limits xs	
+						| (str =~ "^![/$]acc end arguments([ ]*[\t]*)$" :: Bool) = ACCArgsEnd : extract_Limits xs
+						| (str =~ "^![/$]acc constarguments([ ]*[\t]*)$" :: Bool) = ACCConstArgsBegin : extract_Limits xs
+						| (str =~ "^![/$]acc end constarguments([ ]*[\t]*)$" :: Bool) = ACCConstArgsEnds : extract_Limits xs
 						| otherwise = CodeLine str : extract_Limits xs
 extract_Limits [] = []

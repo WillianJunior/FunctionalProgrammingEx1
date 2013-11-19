@@ -21,7 +21,10 @@ data VarType = MkVarType {
 	at_wordsz :: Integer
 }  deriving (Eq, Ord, Show)
 
-data NumType =  F95Integer | F95Real  deriving (Eq, Ord, Show)
+data NumType =  F95Integer | F95Real  deriving (Eq, Ord)
+instance Show NumType where
+	show F95Integer = "Int"
+	show F95Real = "Float"
 
 data OclArgMode = Read | Write | ReadWrite 
 	deriving (Eq, Ord, Show)

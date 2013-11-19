@@ -4,13 +4,33 @@ module OpenCLAPIGenerator (
 import F95Types
 import Text.Regex.Posix -- suggest use of regular expressions
 import Data.Char
-import qualified Data.Map as H (lookup)
+import qualified Data.Map as H (toList, lookup)
 
 import System.Process -- only for localtime, entirely optional
 import System.IO.Unsafe (unsafePerformIO) -- only for localtime, entirely optional
 
+data ACCPragma = BufDecls
+			   | SizeDecls
+			   | MakeSizes
+			   | MakeBuffers
+			   | SetArgs
+			   | WriteBuffers
+			   | NotPragma String
+			   deriving (Show)
+
+
 gen_OpenCL_API_calls :: ArgTable -> [String] -> [String] -> [String] -> String -> [String]    
-gen_OpenCL_API_calls ocl_args arg_names const_arg_names src_lines templ_src_name = []
+gen_OpenCL_API_calls ocl_args arg_names const_arg_names src_lines templ_src_name = gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names $ map lineClassifier src_lines
+
+gen_OpenCL_API_calls_helper :: ArgTable -> [String] -> [String] -> [ACCPragma] -> [String]  
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (BufDecls:pgs) = (generateAllBufDecls arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SizeDecls:pgs) = (generateAllSizeDecls ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeSizes:pgs) = [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeBuffers:pgs) = [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SetArgs:pgs) = [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (WriteBuffers:pgs) = (generateAllWriteBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names ((NotPragma str):pgs) = str : gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names [] = []
 
 get_c_type :: VarType -> String
 get_c_type vt = ""
@@ -19,3 +39,36 @@ ucfirst (x:xs)  = (toUpper x):xs
 
 localtime = unsafePerformIO $ readProcess "/bin/date" [] []
 
+lineClassifier :: String -> ACCPragma
+lineClassifier str | (str =~ "^![/$]acc bufdecls([ ]*[\t]*)$" :: Bool) = BufDecls
+				   | (str =~ "^![/$]acc sizedecls([ ]*[\t]*)$" :: Bool) = SizeDecls
+				   | (str =~ "^![/$]acc makesizes([ ]*[\t]*)$" :: Bool) = MakeSizes
+				   | (str =~ "^![/$]acc makebuffers([ ]*[\t]*)$" :: Bool) = MakeBuffers
+				   | (str =~ "^![/$]acc setargs([ ]*[\t]*)$" :: Bool) = SetArgs
+				   | (str =~ "^![/$]acc writebuffers([ ]*[\t]*)$" :: Bool) = WriteBuffers
+				   | otherwise = NotPragma str
+
+generateAllBufDecls :: [String] -> [String]
+generateAllBufDecls = map (\str -> ("integer(8) :: " ++ str ++ "_buf"))
+
+generateAllSizeDecls :: ArgTable -> [String] -> [String]
+generateAllSizeDecls ocl_args arg_names = [("integer, dimension(" ++ dim ++ "):: " ++ arg_name ++ "_sz") | 
+			let args = H.toList ocl_args, 
+			(dim, arg) <- join2 (map (show.length.vd_dimension.snd) args) args, 
+			arg_name <- arg_names, 
+			elem arg_name $ (vd_varlist.snd) arg]
+
+generateAllWriteBuffers :: ArgTable -> [String] -> [String]
+generateAllWriteBuffers ocl_args arg_names = [("call oclWrite" ++ dim ++ "D" ++ var_type ++ " ArrayBuffer(" ++ arg_name ++ "_buf, " ++ arg_name ++ "_sz, " ++ arg_name ++ " )") | 
+			let args = H.toList ocl_args, 
+			(dim, var_type, arg) <- join3 (map (show.length.vd_dimension.snd) args) (map (show.at_numtype.vd_vartype.snd) args) args, 
+			arg_name <- arg_names,
+			elem arg_name $ (vd_varlist.snd) arg]
+
+join2 :: [a] -> [b] -> [(a,b)]
+join2 (x:xs) (y:ys) = (x,y) : join2 xs ys
+join2 [] [] = []
+
+join3 :: [a] -> [b] -> [c] -> [(a,b,c)]
+join3 (x:xs) (y:ys) (z:zs) = (x,y,z) : join3 xs ys zs
+join3 [] [] [] = []
