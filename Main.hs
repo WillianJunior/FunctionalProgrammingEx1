@@ -54,13 +54,25 @@ parse_par_decls par_lines = H.fromList $ joinLists (map pd_parname parsedParams)
 		joinLists [] [] = []
 
 -- This takes a range expression and returns a tuple with the variable name and the computed size
-eval_range_expr :: ArgTable -> VarTable -> String -> (String, [Integer])
-eval_range_expr ocl_args par_table var_name = (var_name, value)
-	where
-		value = (\(Just justVar) -> [myEval (sizeExpr x) par_table | x <- vd_dimension justVar]) var
-		var = H.lookup var_name ocl_args
-		sizeExpr = \x -> Op $ MkOpExpr "sub" (r_stop x) (r_start x)
+-- eval_range_expr :: ArgTable -> VarTable -> String -> (String, [Integer])
+-- eval_range_expr ocl_args par_table var_name = (var_name, value)
+--	where
+--		value = (\(Just justVar) -> [myEval (sizeExpr x) par_table | x <- vd_dimension justVar]) var
+--		var = H.lookup var_name ocl_args
+--		sizeExpr = \x -> Op $ MkOpExpr "sub" (r_stop x) (r_start x)
  
+-- this way we don't need to run through the ArgTable twice (once for every argument and the snd time to find the VarDecl on the ArgTable)
+updateArgTableRange :: [(String, VarDecl)] -> VarTable -> [(String, VarDecl)]
+updateArgTableRange argTable@((arg_name,arg):args) varTable = (arg_name,newArg) : updateArgTableRange args varTable
+	where
+		newArg = MkVarDecl (vd_vartype arg) (newDimension) (vd_intent arg) (vd_varlist arg) (vd_argmode arg) (vd_is_arg arg)
+		newDimension = [range | range <- map newRange $ vd_dimension arg]
+		newRange (MkRange start end) = (MkRange (getNewExpr start $ exprCalc start) (getNewExpr end $ exprCalc end))
+		getNewExpr old (Just expr) = Const expr
+		getNewExpr old Nothing = old
+		exprCalc expr = myEval (Just expr) varTable
+updateArgTableRange [] _ = []
+
 -- ###############################
 
 main :: IO ()
@@ -69,7 +81,7 @@ main = do
 	let (args, consts, params) = extract_OpenACC_regions_from_F95_src srcLines
 	let (tempArgTable, argsNames, consArgsNames) = parse_arg_decls args consts
 	let varTable = parse_par_decls params
-	-- let argSizeTable = H.fromList $ map (eval_range_expr tempArgTable varTable) (argsNames ++ consArgsNames)
+	let argTable = H.fromList $ updateArgTableRange (H.toList argTable) varTable
 	let output = gen_OpenCL_API_calls tempArgTable argsNames consArgsNames srcLines []
 	write_F95_src gen_src_name output
 

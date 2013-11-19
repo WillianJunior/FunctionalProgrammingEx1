@@ -9,7 +9,8 @@ import qualified Data.Map as H (toList, lookup)
 import System.Process -- only for localtime, entirely optional
 import System.IO.Unsafe (unsafePerformIO) -- only for localtime, entirely optional
 
--- prefixes of generaed code
+-- prefixes of generated code
+-- prefix = ("!!! This code was generated on " ++ localtime ++ " from module_LES_ocl_TEMPL.f95 using ./generate_OpenCL_API_calls_from_ACC_pragmas.pl\n!!! DON'T EDIT !!! Edit module_LES_ocl_TEMPL.f95 instead, and regenerate.")
 bufDeclsPref = "! OpenCL buffer declarations"
 sizeDeclsPref = "\t! OpenCL buffer size declarations"
 makeSizesPref = "\t\t! OpenCL buffer sizes"

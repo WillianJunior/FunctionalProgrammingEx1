@@ -21,11 +21,25 @@ eval_expr oe vt = 0
 eval_prefix_expr :: PrefixOpExpr -> VarTable -> Integer
 eval_prefix_expr pe vt = 0
 
-myEval :: Expr -> VarTable -> Integer -- this can evolve into expr (what if the var is an expression? we should only calculate it once)
-myEval (Var name) vt = myEval ((\(Just expr) -> expr) $ H.lookup name vt) vt
-myEval (Const val) _ = val
-myEval (Op (MkOpExpr "add" lhs rhs)) vt = (myEval lhs vt) + (myEval rhs vt)
-myEval (Op (MkOpExpr "sub" lhs rhs)) vt = (myEval lhs vt) - (myEval rhs vt)
-myEval (Op (MkOpExpr "div" lhs rhs)) vt = (myEval lhs vt) `div` (myEval rhs vt)
-myEval (Op (MkOpExpr "mul" lhs rhs)) vt = (myEval lhs vt) * (myEval rhs vt)
-myEval (Pref (MkPrefixOpExpr "negative" expr)) vt = - myEval expr vt
+-- more elegant way to check if an evaluation is possible or not (TODO: an even better way is using Either to perform an incomplete evaluation)
+myEval :: Maybe Expr -> VarTable -> Maybe Integer
+myEval Nothing _ = Nothing
+myEval (Just (Const val)) _ = Just val
+myEval (Just (Var name)) vt = myEval (H.lookup name vt) vt
+myEval (Just (Op (MkOpExpr "add" lhs rhs))) vt = evalOp (Just lhs) (Just rhs) (+) vt
+myEval (Just (Op (MkOpExpr "sub" lhs rhs))) vt = evalOp (Just lhs) (Just rhs) (-) vt
+myEval (Just (Op (MkOpExpr "div" lhs rhs))) vt = evalOp (Just lhs) (Just rhs) (div) vt
+myEval (Just (Op (MkOpExpr "mul" lhs rhs))) vt = evalOp (Just lhs) (Just rhs) (*) vt
+myEval (Just (Pref (MkPrefixOpExpr "negative" expr))) vt = evalOp (Just (Const 0)) (Just expr) (-) vt
+
+fromJust :: Maybe a -> a
+fromJust (Just a) = a
+
+evalOp :: Maybe Expr -> Maybe Expr -> (Integer -> Integer -> Integer) -> VarTable -> Maybe Integer
+evalOp (Just lhs) (Just rhs) op vt = do
+	if (lhsM /= Nothing && rhsM /= Nothing)
+	then Just (op (fromJust lhsM) (fromJust rhsM))
+	else Nothing
+	where
+		lhsM = myEval (Just lhs) vt
+		rhsM = myEval (Just rhs) vt
