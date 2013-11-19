@@ -35,7 +35,7 @@ gen_OpenCL_API_calls_helper :: ArgTable -> [String] -> [String] -> [ACCPragma] -
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (BufDecls:pgs) = bufDeclsPref : (generateAllBufDecls arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SizeDecls:pgs) = sizeDeclsPref : (generateAllSizeDecls ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeSizes:pgs) = makeSizesPref : [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
-gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeBuffers:pgs) = makeBuffersPref : [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeBuffers:pgs) = makeBuffersPref : (generateAllMakeBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SetArgs:pgs) = setArgsPref : (generateAllSetArgs ocl_args arg_names const_arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (WriteBuffers:pgs) = writeBuffersPref : (generateAllWriteBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names ((NotPragma str):pgs) = str : gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
@@ -65,6 +65,13 @@ generateAllSizeDecls ocl_args arg_names = [("\t\tinteger, dimension(" ++ dim ++ 
 			let args = H.toList ocl_args, 
 			(dim, arg) <- join2 (map (show.length.vd_dimension.snd) args) args, 
 			arg_name <- arg_names, 
+			elem arg_name $ (vd_varlist.snd) arg]
+
+generateAllMakeBuffers :: ArgTable -> [String] -> [String]
+generateAllMakeBuffers ocl_args arg_names = [("\t\tcall oclMake" ++ dim ++ "D" ++ var_type ++ "Array" ++ arg_mode ++ "Buffer(" ++ arg_name ++ "_buf," ++ arg_name ++ "_sz," ++ arg_name ++ ")") |
+			let args = H.toList ocl_args, 
+			(dim, var_type, arg_mode, arg) <- join4 (map (show.length.vd_dimension.snd) args) (map (show.at_numtype.vd_vartype.snd) args) (map (show.vd_argmode.snd) args) args, 
+			arg_name <- arg_names,
 			elem arg_name $ (vd_varlist.snd) arg]
 
 generateAllSetArgs :: ArgTable -> [String] -> [String] -> [String]
@@ -98,6 +105,10 @@ join2 [] [] = []
 join3 :: [a] -> [b] -> [c] -> [(a,b,c)]
 join3 (x:xs) (y:ys) (z:zs) = (x,y,z) : join3 xs ys zs
 join3 [] [] [] = []
+
+join4 :: [a] -> [b] -> [c] -> [d] -> [(a,b,c,d)]
+join4 (w:ws) (x:xs) (y:ys) (z:zs) = (w,x,y,z) : join4 ws xs ys zs
+join4 [] [] [] [] = []
 
 enumerate :: Int -> [(String, String)] -> [String]
 enumerate current ((a,b):s) = (a ++ (show current) ++ b) : enumerate (current+1) s

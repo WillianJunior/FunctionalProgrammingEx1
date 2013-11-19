@@ -190,6 +190,26 @@ module module_les_ocl
         n_state(1)=0
 
 		! Create OpenCL buffers
+		call oclMake3DFloatArrayReadWriteBuffer(cn1_buf,cn1_sz,cn1)
+		call oclMake1DFloatArrayReadWriteBuffer(cn234ls_buf,cn234ls_sz,cn234ls)
+		call oclMake4DFloatArrayReadWriteBuffer(cov_buf,cov_sz,cov)
+		call oclMake4DFloatArrayReadWriteBuffer(diu_buf,diu_sz,diu)
+		call oclMake1DFloatArrayReadWriteBuffer(dx1_buf,dx1_sz,dx1)
+		call oclMake1DFloatArrayReadWriteBuffer(dxs_buf,dxs_sz,dxs)
+		call oclMake1DFloatArrayReadWriteBuffer(dy1_buf,dy1_sz,dy1)
+		call oclMake1DFloatArrayReadWriteBuffer(dys_buf,dys_sz,dys)
+		call oclMake1DFloatArrayReadWriteBuffer(dzn_buf,dzn_sz,dzn)
+		call oclMake1DFloatArrayReadWriteBuffer(dzs_buf,dzs_sz,dzs)
+		call oclMake4DFloatArrayReadWriteBuffer(fgh_buf,fgh_sz,fgh)
+		call oclMake4DFloatArrayReadWriteBuffer(fgh_old_buf,fgh_old_sz,fgh_old)
+		call oclMake4DFloatArrayReadWriteBuffer(mask1_buf,mask1_sz,mask1)
+		call oclMake1DIntArrayReadWriteBuffer(n_state_buf,n_state_sz,n_state)
+		call oclMake4DFloatArrayReadWriteBuffer(nou_buf,nou_sz,nou)
+		call oclMake3DFloatArrayReadWriteBuffer(p_buf,p_sz,p)
+		call oclMake3DFloatArrayReadWriteBuffer(rhs_buf,rhs_sz,rhs)
+		call oclMake3DFloatArrayReadWriteBuffer(sm_buf,sm_sz,sm)
+		call oclMake4DFloatArrayReadWriteBuffer(uvw_buf,uvw_sz,uvw)
+		call oclMake1DFloatArrayReadWriteBuffer(z2_buf,z2_sz,z2)
 
 		! Set OpenCL argument order
 		call oclSetFloatArrayArg(0, cn1_buf )
