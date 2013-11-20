@@ -185,6 +185,26 @@ module module_les_ocl
         ! create opencl buffers
 
 		! OpenCL buffer sizes
+		p_sz = (/ 152, 152, 91 /)
+		cn1_sz = (/ 149, 149, 89 /)
+		rhs_sz = (/ 151, 151, 91 /)
+		sm_sz = (/ 152, 152, 91 /)
+		dxs_sz = (/ 150 /)
+		dys_sz = (/ 150 /)
+		dzs_sz = (/ 93 /)
+		dx1_sz = (/ 152 /)
+		dy1_sz = (/ 151 /)
+		dzn_sz = (/ 93 /)
+		z2_sz = (/ 91 /)
+		uvw_sz = (/ 3, 151, 152, 92 /)
+		fgh_sz = (/ 3, 150, 150, 90 /)
+		fgh_old_sz = (/ 3, 149, 149, 89 /)
+		cov_sz = (/ 15, 153, 152, 92 /)
+		diu_sz = (/ 15, 153, 152, 92 /)
+		nou_sz = (/ 15, 153, 152, 92 /)
+		mask1_sz = (/ 3, 151, 152, 92 /)
+		cn234ls_sz = (/ 779 /)
+		n_state_sz = (/ 1 /)
 
         n_state(0)=0
         n_state(1)=0

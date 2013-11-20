@@ -4,7 +4,7 @@ import F95OpenACCParser -- ( extract_OpenACC_regions_from_F95_src )
 import F95VarDeclParser ( run_parser, f95_var_decl_parser )
 import F95ParDeclParser ( f95_par_decl_parser )
 import F95Types
-import OpenCLAPIGenerator ( gen_OpenCL_API_calls )
+import OpenCLAPIGenerator --( gen_OpenCL_API_calls )
 import EvalExpr    
 import qualified Data.Map as H
 
@@ -81,8 +81,8 @@ main = do
 	let (args, consts, params) = extract_OpenACC_regions_from_F95_src srcLines
 	let (tempArgTable, argsNames, consArgsNames) = parse_arg_decls args consts
 	let varTable = parse_par_decls params
-	let argTable = H.fromList $ updateArgTableRange (H.toList argTable) varTable
-	let output = gen_OpenCL_API_calls tempArgTable argsNames consArgsNames srcLines []
+	let argTable = H.fromList $ updateArgTableRange (H.toList tempArgTable) varTable
+	let output = gen_OpenCL_API_calls argTable argsNames consArgsNames srcLines []
 	write_F95_src gen_src_name output
 
 --        "-- read source template from file"

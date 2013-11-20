@@ -1,6 +1,6 @@
-module OpenCLAPIGenerator (
-    gen_OpenCL_API_calls
-        ) where
+module OpenCLAPIGenerator where -- (
+--    gen_OpenCL_API_calls
+--        ) where
 import F95Types
 import Text.Regex.Posix -- suggest use of regular expressions
 import Data.Char
@@ -35,7 +35,7 @@ gen_OpenCL_API_calls ocl_args arg_names const_arg_names src_lines templ_src_name
 gen_OpenCL_API_calls_helper :: ArgTable -> [String] -> [String] -> [ACCPragma] -> [String]  
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (BufDecls:pgs) = bufDeclsPref : (generateAllBufDecls arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SizeDecls:pgs) = sizeDeclsPref : (generateAllSizeDecls ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
-gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeSizes:pgs) = makeSizesPref : [] ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeSizes:pgs) = makeSizesPref : (generateAllMakeSizes ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeBuffers:pgs) = makeBuffersPref : (generateAllMakeBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SetArgs:pgs) = setArgsPref : (generateAllSetArgs ocl_args arg_names const_arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (WriteBuffers:pgs) = writeBuffersPref : (generateAllWriteBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
@@ -67,6 +67,16 @@ generateAllSizeDecls ocl_args arg_names = [("\t\tinteger, dimension(" ++ dim ++ 
 			(dim, arg) <- join2 (map (show.length.vd_dimension.snd) args) args, 
 			arg_name <- arg_names, 
 			elem arg_name $ (vd_varlist.snd) arg]
+
+generateAllMakeSizes :: ArgTable -> [String] -> [String]
+generateAllMakeSizes ocl_args (name:names) 
+		| arg == Nothing = generateAllMakeSizes ocl_args names
+		| calculatedDimension /= Nothing = [("\t\t" ++ name ++"_sz = (/ " ++ (numbersList $ just calculatedDimension) ++ " /)")] ++ generateAllMakeSizes ocl_args names
+		| otherwise = ["\t\t" ++ name ++ "_sz = shape(" ++ name ++ ")"] ++ generateAllMakeSizes ocl_args names
+	where
+		arg = H.lookup name ocl_args
+		calculatedDimension = calculateDim.vd_dimension $ just arg
+generateAllMakeSizes _ [] = []
 
 generateAllMakeBuffers :: ArgTable -> [String] -> [String]
 generateAllMakeBuffers ocl_args arg_names = [("\t\tcall oclMake" ++ dim ++ "D" ++ var_type ++ "Array" ++ arg_mode ++ "Buffer(" ++ arg_name ++ "_buf," ++ arg_name ++ "_sz," ++ arg_name ++ ")") |
@@ -114,3 +124,23 @@ join4 [] [] [] [] = []
 enumerate :: Int -> [(String, String)] -> [String]
 enumerate current ((a,b):s) = (a ++ (show current) ++ b) : enumerate (current+1) s
 enumerate _ [] = []
+
+numbersList :: [Integer] -> String
+numbersList [x] = show x
+numbersList (x:xs) = (show x) ++ ", " ++ numbersList xs
+
+calculateDim :: [Range] -> Maybe [Integer]
+calculateDim = flatDim.calculateDimHelper
+
+flatDim :: [Maybe Integer] -> Maybe [Integer]
+flatDim rs = if elem Nothing rs then Nothing else Just (map just rs)
+
+just :: Maybe a -> a
+just (Just a) = a
+
+calculateDimHelper :: [Range] -> [Maybe Integer]
+calculateDimHelper = map calculateRange
+
+calculateRange :: Range -> Maybe Integer
+calculateRange (MkRange (Const start) (Const end)) = Just (end - start)
+calculateRange _ = Nothing
