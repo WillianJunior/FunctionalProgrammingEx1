@@ -22,7 +22,7 @@ module module_LES_ocl
         integer, parameter  :: jp = 150
         integer, parameter  :: kp = 90    
     ! Arguments
-        real(kind=4), dimension(0:ip+2,0:jp+2,0:kpaaaaaaaaa+1)  :: p
+        real(kind=4), dimension(0:ip+2,0:jp+2,0:kp+1)  :: p
         real(kind=4), dimension(0:ip+1,-1:jp+1,0:kp+1)  :: u
         real(kind=4), dimension(0:ip+1,-1:jp+1,0:kp+1)  :: v
         real(kind=4), dimension(0:ip+1,-1:jp+1,-1:kp+1)  :: w
@@ -175,7 +175,7 @@ module module_LES_ocl
         ! Create OpenCL buffers
 
 		! OpenCL buffer sizes
-		p_sz = shape(p)
+		p_sz = (/ 152, 152, 91 /)
 		cn1_sz = (/ 149, 149, 89 /)
 		rhs_sz = (/ 151, 151, 91 /)
 		sm_sz = (/ 152, 152, 91 /)
@@ -595,4 +595,4 @@ module module_LES_ocl
 
     subroutine convert_from_fgh_old(fgh_old,fold,gold,hold)
         use params_common_sn
-        real(kind=4), dimension(ip,jp,kp)  :: fold,gold,h
+        real(kind=4), dimension(ip,jp,kp)  :: fold,gold,

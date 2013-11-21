@@ -1,4 +1,24 @@
 {
+{-
+
+ Student Identification
+ Name: Willian de Oliveira Barreiros Junior
+ Matriculation Number: 2105514
+ Course: Functional Programming 4
+ Exercise Title: Assessed Exercise 1 (Mandatory): 
+    Parsing, Code Generation and State Manipulation 
+    in Haskell: a Real-world Application
+ Date: 21/11/2013
+
+ Status Report
+ The code is compiling without any error, and as far as it
+ was tested is working. This file is used to generate the
+ parameters lexical scannerusing Alex. The generated code 
+ will have only one function for us to use: 
+ scanACCParamTokens :: String -> [Token]
+
+ -}
+
 {-# OPTIONS_GHC -w #-}
 module OpenACCParamLexical (Token(..),scanACCParamTokens) where
 }

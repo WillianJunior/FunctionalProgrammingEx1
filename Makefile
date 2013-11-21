@@ -1,3 +1,4 @@
+# build the hole project, including the parsers
 all: OpenACCVarLexical.hs OpenACCArgParser.hs OpenACCConstParser.hs OpenACCParamLexical.hs OpenACCParamParser.hs
 	ghc Main.hs -o Main
 	-rm *.o
@@ -18,6 +19,7 @@ OpenACCParamLexical.hs: parsers/OpenACCParamParser.x
 OpenACCParamParser.hs: parsers/OpenACCParamParser.y
 	happy parsers/OpenACCParamParser.y -o OpenACCParamParser.hs
 
+# clean the hole project, including the parsers
 clean:
 	-rm OpenACCVarLexical.hs
 	-rm OpenACCArgParser.hs
