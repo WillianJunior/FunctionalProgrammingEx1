@@ -1,6 +1,36 @@
-module OpenCLAPIGenerator where -- (
---    gen_OpenCL_API_calls
---        ) where
+{-
+
+ Student Identification
+ Name: Willian de Oliveira Barreiros Junior
+ Matriculation Number: 2105514
+ Course: Functional Programming 4
+ Exercise Title: Assessed Exercise 1 (Mandatory): 
+    Parsing, Code Generation and State Manipulation 
+    in Haskell: a Real-world Application
+ Date: 21/11/2013
+
+ Status Report
+ The code is compiling without any error, and as far as it
+ was tested is working. To help the understanding of the
+ code, most of the functions have comments.
+
+ Since the code generation is pretty straightfoward the
+ functions' comments are suposed to be enought.
+
+ The strategy to generate the code is as folows:
+ 1 - classify the line using regular expressions in
+ order to find the code regions
+ 2 - call the right code generation function using
+ pattern maching
+ 3 - generate the code relative to the region
+ 4 - insert the generated code and keep iterating
+ through the src file 
+
+ -}
+
+module OpenCLAPIGenerator (
+	gen_OpenCL_API_calls
+) where
 import F95Types
 import Text.Regex.Posix -- suggest use of regular expressions
 import Data.Char
@@ -25,9 +55,12 @@ data ACCPragma = BufDecls
 			   | MakeBuffers
 			   | SetArgs
 			   | WriteBuffers
-			   | NotPragma String
+			   | RemaningFlags -- used to remove the !$ACC... statements
+			   | NotPragma String -- regular code
 			   deriving (Show)
 
+---------------------------------------------------------
+-- generate the entire code
 
 gen_OpenCL_API_calls :: ArgTable -> [String] -> [String] -> [String] -> String -> [String]    
 gen_OpenCL_API_calls ocl_args arg_names const_arg_names src_lines templ_src_name = gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names $ map lineClassifier src_lines
@@ -39,6 +72,7 @@ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeSizes:pgs) =
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (MakeBuffers:pgs) = makeBuffersPref : (generateAllMakeBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (SetArgs:pgs) = setArgsPref : (generateAllSetArgs ocl_args arg_names const_arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (WriteBuffers:pgs) = writeBuffersPref : (generateAllWriteBuffers ocl_args arg_names) ++ gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
+gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names (RemaningFlags:pgs) = gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names ((NotPragma str):pgs) = str : gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names pgs
 gen_OpenCL_API_calls_helper ocl_args arg_names const_arg_names [] = []
 
@@ -49,14 +83,23 @@ ucfirst (x:xs)  = (toUpper x):xs
 
 localtime = unsafePerformIO $ readProcess "/bin/date" [] []
 
+-----------------------------------------------------------------------
+-- classify a code line
+
 lineClassifier :: String -> ACCPragma
-lineClassifier str | (str =~ "^![/$]acc bufdecls([ ]*[\t]*)$" :: Bool) = BufDecls
-				   | (str =~ "^![/$]acc sizedecls([ ]*[\t]*)$" :: Bool) = SizeDecls
-				   | (str =~ "^![/$]acc makesizes([ ]*[\t]*)$" :: Bool) = MakeSizes
-				   | (str =~ "^![/$]acc makebuffers([ ]*[\t]*)$" :: Bool) = MakeBuffers
-				   | (str =~ "^![/$]acc setargs([ ]*[\t]*)$" :: Bool) = SetArgs
-				   | (str =~ "^![/$]acc writebuffers([ ]*[\t]*)$" :: Bool) = WriteBuffers
+lineClassifier str | (strLc =~ "^![/$]acc bufdecls([ ]*[\t]*)$" :: Bool) = BufDecls
+				   | (strLc =~ "^![/$]acc sizedecls([ ]*[\t]*)$" :: Bool) = SizeDecls
+				   | (strLc =~ "^![/$]acc makesizes([ ]*[\t]*)$" :: Bool) = MakeSizes
+				   | (strLc =~ "^![/$]acc makebuffers([ ]*[\t]*)$" :: Bool) = MakeBuffers
+				   | (strLc =~ "^![/$]acc setargs([ ]*[\t]*)$" :: Bool) = SetArgs
+				   | (strLc =~ "^![/$]acc writebuffers([ ]*[\t]*)$" :: Bool) = WriteBuffers
+				   | (strLc =~ "^![/$]acc" :: Bool) = RemaningFlags
 				   | otherwise = NotPragma str
+	where
+		strLc = map toLower str
+
+------------------------------------------------------------------
+-- code generation functions
 
 generateAllBufDecls :: [String] -> [String]
 generateAllBufDecls = map (\str -> ("\t\tinteger(8) :: " ++ str ++ "_buf"))
@@ -108,6 +151,9 @@ generateAllWriteBuffers ocl_args arg_names = [("\t\tcall oclWrite" ++ dim ++ "D"
 			(dim, var_type, arg) <- join3 (map (show.length.vd_dimension.snd) args) (map (show.at_numtype.vd_vartype.snd) args) args, 
 			arg_name <- arg_names,
 			elem arg_name $ (vd_varlist.snd) arg]
+
+------------------------------------------------------------------
+-- helper functions
 
 join2 :: [a] -> [b] -> [(a,b)]
 join2 (x:xs) (y:ys) = (x,y) : join2 xs ys

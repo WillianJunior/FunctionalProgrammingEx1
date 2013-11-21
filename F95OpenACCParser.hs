@@ -1,6 +1,28 @@
-module F95OpenACCParser where
-    --extract_OpenACC_regions_from_F95_src
---) where
+{-
+
+ Student Identification
+ Name: Willian de Oliveira Barreiros Junior
+ Matriculation Number: 2105514
+ Course: Functional Programming 4
+ Exercise Title: Assessed Exercise 1 (Mandatory): 
+    Parsing, Code Generation and State Manipulation 
+    in Haskell: a Real-world Application
+ Date: 21/11/2013
+
+ Status Report
+ The code is compiling without any error, and as far as it
+ was tested is working. This code is just an incomplete
+ parser using regular expressions.
+
+ In order to get the arguments that are inside the region
+ a stack was used, (push in the begining and pop at 
+ the end of the region).
+ 
+ -}
+
+module F95OpenACCParser (
+    extract_OpenACC_regions_from_F95_src
+) where
 
 import Text.Regex.Posix
 
